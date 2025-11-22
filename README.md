@@ -75,6 +75,7 @@ monaco.editor.create(document.getElementById('container'), {
 
   - default value: ['editorWorkerService', 'css', 'html', 'json', 'typescript'].
   - Assuming only use css worker(editorWorkerService is must include base worker), you can set ['editorWorkerService', 'css']
+  - When using Monaco versions that renamed the language namespaces (e.g. `monaco.css` instead of `monaco.languages.css`), you can continue to pass either form (`css` or `languages.css`, same for `html`, `json`, `typescript`). The plugin normalizes the labels so both the legacy and the new names resolve to the correct worker.
 
 - `customWorkers` (`IWorkerDefinition[]`) - include your custom worker.
 

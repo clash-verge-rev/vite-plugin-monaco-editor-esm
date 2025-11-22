@@ -27,19 +27,21 @@ export function getWorkPath(
     }
   }
 
-  if (workerPaths['typescript']) {
-    // javascript shares the same worker
-    workerPaths['javascript'] = workerPaths['typescript']
+  const workerLabelAliases: Record<string, string[]> = {
+    typescript: ['javascript', 'languages.typescript'],
+    css: ['less', 'scss', 'languages.css'],
+    html: ['handlebars', 'razor', 'languages.html'],
+    json: ['languages.json'],
   }
-  if (workerPaths['css']) {
-    // scss and less share the same worker
-    workerPaths['less'] = workerPaths['css']
-    workerPaths['scss'] = workerPaths['css']
-  }
-  if (workerPaths['html']) {
-    // handlebars, razor and html share the same worker
-    workerPaths['handlebars'] = workerPaths['html']
-    workerPaths['razor'] = workerPaths['html']
+
+  for (const [label, aliases] of Object.entries(workerLabelAliases)) {
+    const workerUrl = workerPaths[label]
+    if (!workerUrl) {
+      continue
+    }
+    for (const alias of aliases) {
+      workerPaths[alias] = workerUrl
+    }
   }
 
   return workerPaths

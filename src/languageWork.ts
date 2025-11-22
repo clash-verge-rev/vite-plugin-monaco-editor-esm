@@ -1,10 +1,29 @@
 export interface IWorkerDefinition {
-  label: string;
-  entry: string;
+  label: string
+  entry: string
 }
 
+const builtinLanguageLabels = [
+  'editorWorkerService',
+  'css',
+  'html',
+  'json',
+  'typescript',
+] as const
 
-export const languageWorkAttr: IWorkerDefinition[] = [
+type BuiltinLanguageLabel = (typeof builtinLanguageLabels)[number]
+
+type DeprecatedLanguageLabel =
+  | 'languages.css'
+  | 'languages.html'
+  | 'languages.json'
+  | 'languages.typescript'
+
+export type EditorLanguageWorks = BuiltinLanguageLabel | DeprecatedLanguageLabel
+
+type BuiltinWorkerDefinition = IWorkerDefinition & { label: BuiltinLanguageLabel }
+
+export const languageWorkAttr = [
   {
     label: 'editorWorkerService',
     entry: 'monaco-editor/esm/vs/editor/editor.worker',
@@ -25,15 +44,27 @@ export const languageWorkAttr: IWorkerDefinition[] = [
     label: 'typescript',
     entry: 'monaco-editor/esm/vs/language/typescript/ts.worker',
   },
-];
+] satisfies BuiltinWorkerDefinition[]
 
+const legacyNamespaceAliasMap: Record<DeprecatedLanguageLabel, BuiltinLanguageLabel> = {
+  'languages.css': 'css',
+  'languages.html': 'html',
+  'languages.json': 'json',
+  'languages.typescript': 'typescript',
+}
 
-const languageWorksByLabel: { [language: string]: IWorkerDefinition } = {};
-languageWorkAttr.forEach(
-  (languageWork) => (languageWorksByLabel[languageWork.label] = languageWork)
-);
+export function normalizeLanguageLabel(label: EditorLanguageWorks): BuiltinLanguageLabel {
+  return (legacyNamespaceAliasMap[label as DeprecatedLanguageLabel] ?? label) as BuiltinLanguageLabel
+}
 
-export {languageWorksByLabel}
+const languageWorksByLabel: Record<BuiltinLanguageLabel, BuiltinWorkerDefinition> =
+  languageWorkAttr.reduce((acc, languageWork) => {
+    acc[languageWork.label] = languageWork
+    return acc
+  }, {} as Record<BuiltinLanguageLabel, BuiltinWorkerDefinition>)
 
+export { languageWorksByLabel }
 
-export type EditorLanguageWorks = 'css' | 'html' | 'json' | 'typescript' | 'editorWorkerService'
+export const builtinLanguageWorkerLabels: BuiltinLanguageLabel[] = languageWorkAttr.map(
+  (languageWork) => languageWork.label
+)

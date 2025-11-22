@@ -2,7 +2,13 @@ import { HtmlTagDescriptor, Plugin, ResolvedConfig } from 'vite'
 import * as path from 'path'
 import * as fs from 'fs'
 import { buildSync } from 'esbuild'
-import { EditorLanguageWorks, IWorkerDefinition, languageWorksByLabel } from './languageWork.js'
+import {
+  EditorLanguageWorks,
+  IWorkerDefinition,
+  builtinLanguageWorkerLabels,
+  languageWorksByLabel,
+  normalizeLanguageLabel,
+} from './languageWork.js'
 import { workerMiddleware, cacheDir, getFilenameByEntry, getWorkPath } from './workerMiddleware.js'
 
 /**
@@ -21,7 +27,11 @@ export function resolveMonacoPath(filePath: string): string {
 }
 
 export function getWorks(options: IMonacoEditorOpts) {
-  let works: IWorkerDefinition[] | undefined = options.languageWorkers?.map(
+  const normalizedWorkers = options.languageWorkers
+    ? Array.from(new Set(options.languageWorkers.map((work) => normalizeLanguageLabel(work))))
+    : undefined
+
+  let works: IWorkerDefinition[] | undefined = normalizedWorkers?.map(
     (work) => languageWorksByLabel[work]
   )
 
@@ -62,7 +72,7 @@ export interface IMonacoEditorOpts {
 
 export default function monacoEditorPlugin(options?: IMonacoEditorOpts): Plugin {
   const languageWorkers =
-    options?.languageWorkers ?? (Object.keys(languageWorksByLabel) as EditorLanguageWorks[])
+    options?.languageWorkers ?? [...builtinLanguageWorkerLabels]
   const publicPath = options?.publicPath ?? 'monacoeditorwork'
   const globalAPI = options?.globalAPI ?? false
   const customWorkers = options?.customWorkers ?? []
