@@ -1,6 +1,7 @@
 import { HtmlTagDescriptor, Plugin, ResolvedConfig } from 'vite'
 import * as path from 'path'
 import * as fs from 'fs'
+import { createRequire } from 'module'
 import { buildSync } from 'esbuild'
 import {
   EditorLanguageWorks,
@@ -11,18 +12,24 @@ import {
 } from './languageWork.js'
 import { workerMiddleware, cacheDir, getFilenameByEntry, getWorkPath } from './workerMiddleware.js'
 
+const nodeRequire = createRequire(import.meta.url)
+
 /**
  * Return a resolved path for a given Monaco file.
  */
 export function resolveMonacoPath(filePath: string): string {
+  if (path.isAbsolute(filePath)) {
+    return filePath
+  }
+
   try {
+    return nodeRequire.resolve(filePath)
+  } catch (err) {
     const fullFilePath = path.resolve(path.join(process.cwd(), 'node_modules', filePath))
     if (fs.existsSync(fullFilePath)) {
       return fullFilePath
     }
     return filePath
-  } catch (err) {
-    throw err
   }
 }
 
